@@ -59,3 +59,24 @@ jobs:
               echo "::error title=ESP-IDF build failed::Failed to build ${{ matrix.example }}"
               exit 1
           fi
+
+      - name: Merge EEPROM programmer binaries
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.example == 'examples/module_eeprom_programmer'
+        working-directory: ${{ matrix.example }}
+        shell: bash
+        run: |
+          source "$IDF_PATH/export.sh"
+          if ! idf.py -B build-ci merge-bin -o module_eeprom_programmer-merged.bin; then
+              echo "::error title=ESP-IDF merge failed::Failed to merge module_eeprom_programmer binaries"
+              exit 1
+          fi
+
+      - name: Upload EEPROM programmer firmware
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.example == 'examples/module_eeprom_programmer'
+        uses: actions/upload-artifact@v4
+        with:
+          name: module_eeprom_programmer-${{ github.sha }}
+          path: examples/module_eeprom_programmer/build-ci/module_eeprom_programmer-merged.bin
+          if-no-files-found: error
+          # Keep downloadable firmware for eight weeks.
+          retention-days: 56
