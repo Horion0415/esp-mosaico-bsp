@@ -20,6 +20,10 @@ idf.py -p /dev/ttyACM1 -b 1152000 flash monitor
 
 Replace `/dev/ttyACM1` with your board's serial port.
 
+## Download and Flash Prebuilt Firmware
+
+Download `module_eeprom_programmer-<commit SHA>` from **Artifacts** in a successful `master` run of [GitHub Actions](https://github.com/esp-mosaico/esp-mosaico-bsp/actions/workflows/build-examples.yml). Artifacts are retained for **8 weeks**. Extract the ZIP, open [Mosaico Firmware Update](https://mosaico.espressif.com/firmware-update/), select **Local firmware**, and choose `module_eeprom_programmer-merged.bin` to flash the device following the page instructions.
+
 ## Usage
 
 1. Connect one module at a time.
