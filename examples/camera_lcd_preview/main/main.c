@@ -133,8 +133,6 @@ static esp_err_t preview_init(void)
 static esp_err_t camera_wait_and_open(void)
 {
     mosaico_camera_config_t config = MOSAICO_CAMERA_DEFAULT_CONFIG();
-    /* Bring-up boards ship with an unprogrammed subboard EEPROM. */
-    config.allow_unidentified = true;
 
     while (true) {
         esp_err_t ret = mosaico_camera_new(&config, &s_preview.camera);

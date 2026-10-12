@@ -173,7 +173,7 @@ The EEPROM programmer writes only after **Start Write** is tapped. Its current p
 - The Camera module is supported in the left slot only.
 - Both expansion slots share I2C and other multiplexed resources. Slot ownership is exclusive while a concrete module driver is active.
 - Some camera signals conflict with USB Serial/JTAG pins. Camera examples that document this conflict must be flashed and monitored through UART.
-- Use `module_eeprom_programmer` for manufacturing or descriptor provisioning, with one module connected at a time. Module discovery normally validates existing EEPROM descriptors; the camera examples also allow a present EEPROM with an invalid descriptor.
+- Use `module_eeprom_programmer` for manufacturing or descriptor provisioning, with one module connected at a time.
 - The checked-in magnetic calibration profile is specific to the tested mechanical arrangement. Recalibrate and revalidate it after changing magnets, sensor orientation, enclosure, or assembly tolerances.
 
 ## Resources

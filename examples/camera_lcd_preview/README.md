@@ -16,11 +16,6 @@ separately.
 - UART console; USB Serial/JTAG is disabled because its D- pad
   shares GPIO33 with camera D2
 
-The example sets `allow_unidentified` so the sensor comes up even when the
-subboard EEPROM carries no valid descriptor, which is the usual state on
-bring-up hardware. Production code should keep it off and rely on the
-descriptor.
-
 ## Build and run
 
 ```sh

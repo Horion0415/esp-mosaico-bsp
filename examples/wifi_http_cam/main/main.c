@@ -87,7 +87,6 @@ static esp_err_t camera_wait_and_open(void)
 {
     mosaico_camera_config_t config = MOSAICO_CAMERA_DEFAULT_CONFIG();
     config.pixel_format = V4L2_PIX_FMT_UYVY;
-    config.allow_unidentified = true;
     while (true) {
         esp_err_t ret = mosaico_camera_new(&config, &s_app.camera);
         if (ret == ESP_OK) {

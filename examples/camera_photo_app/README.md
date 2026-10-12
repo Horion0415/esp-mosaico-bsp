@@ -1,56 +1,54 @@
 # Camera Photo App
 
-基于 ESP-Mosaico 的全屏拍照示例：OV3640 实时预览、触摸 UI、SPI NAND 存图。可选启用 **USB High-Speed MSC**，在电脑上以 U 盘方式浏览照片（**默认关闭**）。
+A full-screen camera example for ESP-Mosaico with live OV3640 preview, a touch UI, and photo storage on SPI NAND. Optional **USB High-Speed MSC** lets a PC browse photos on a removable drive (**disabled by default**).
 
-## 功能概览
+## Features
 
-| 类别 | 说明 |
-|------|------|
-| 实时预览 | 480×480 全屏预览，PPA 根据相机实际分辨率动态居中裁剪/缩放 YUV422 画面 |
-| 拍照存储 | JPEG（质量 80，单张最大 256 KB）写入 SPI NAND，文件名 `0001.jpg`、`0002.jpg` … |
-| 相册 | 全屏浏览、左右滑动切换、显示 `文件名(大小KB)`、删除确认 |
-| 闪光灯 | 板载闪光灯 GPIO34；开启后拍照前后各亮 200 ms，曝光临时 ×1.5 |
-| 镜头翻转 | 底部翻转按钮，预览镜像 + 左上角 `Front` / `Rear` 标签，状态写入 NVS |
-| 摄像头开关 | 长按主板顶部按键（GPIO7）进入 PWDN 休眠/唤醒，关时黑屏 + 英文提示 |
-| USB U 盘（可选） | `CONFIG_CAMERA_PHOTO_USB_MSC`，默认关；开启后 HS OTG 导出 `DCIM/` |
+| Feature | Description |
+|---------|-------------|
+| Live preview | Full-screen 480×480 preview; the PPA dynamically center-crops/scales YUV422 frames based on the camera resolution |
+| Photo storage | JPEG images (quality 80, maximum 256 KB each) stored on SPI NAND as `0001.jpg`, `0002.jpg`, etc. |
+| Gallery | Full-screen browsing, horizontal swipes, `filename(sizeKB)` labels, and deletion confirmation |
+| Flash | Onboard flash on GPIO34; when enabled, lights for 200 ms before and after capture, with exposure temporarily increased by ×1.5 |
+| Preview flip | Bottom flip button toggles preview mirroring and the top-left `Front` / `Rear` label; the setting is saved in NVS |
+| Camera power | Long-press the top board button (GPIO7) to enter or leave PWDN sleep; the screen turns black and shows a message while off |
+| USB drive (optional) | `CONFIG_CAMERA_PHOTO_USB_MSC`, disabled by default; exports `DCIM/` over HS OTG when enabled |
 
-## 硬件要求
+## Hardware requirements
 
-### 必需
+### Required
 
-- **ESP-Mosaico** 主板（16 MB Flash、PSRAM、CO5300 480×480 屏）
-- **Camera 子板**（OV3640）插入 **左槽**（EEPROM `0x50`）
+- **ESP-Mosaico** mainboard with 16 MB Flash, PSRAM, and a CO5300 480×480 display
+- **Camera subboard** (OV3640) in the **left slot** (EEPROM `0x50`)
 
-### 接口与约束
+### Interfaces and constraints
 
-| 项目 | 说明 |
-|------|------|
-| 调试串口 | UART 控制台（GPIO33 与相机 D2 共用，已禁用 USB Serial/JTAG） |
-| 顶部按键 | GPIO7，**长按**切换摄像头开/关（短按无效，防误触） |
-| 闪光灯 | GPIO34，低电平点亮 |
-| USB 导出 | USB 2.0 HS OTG，D+ Pin 44 / D- Pin 45（需启用 `CONFIG_CAMERA_PHOTO_USB_MSC`） |
-| 照片 NAND | SPI NAND，目录页与 JPEG 数据区见下方「存储说明」 |
+| Item | Description |
+|------|-------------|
+| Debug port | UART console; USB Serial/JTAG is disabled because GPIO33 is shared with camera D2 |
+| Top button | GPIO7; **long-press** to toggle camera power; short presses are ignored to prevent accidental activation |
+| Flash | GPIO34, active low |
+| USB export | USB 2.0 HS OTG, D+ Pin 44 / D- Pin 45; requires `CONFIG_CAMERA_PHOTO_USB_MSC` |
+| Photo NAND | SPI NAND; see the storage details below for the catalog page and JPEG data area |
 
-相机子板即使 EEPROM 无有效描述符也可启动（`allow_unidentified`）。
+## Project structure
 
-## 工程结构
-
-```
+```text
 examples/camera_photo_app/
-├── partitions.csv          # 自定义分区：app + FAT storage（USB MSC）
+├── partitions.csv          # Custom partitions: app + FAT storage (USB MSC)
 ├── sdkconfig.defaults
 └── main/
-    ├── main.c              # 预览/拍照/相册主逻辑
-    ├── camera_ui.c/h       # LVGL 相机与相册 UI
-    ├── camera_settings.c/h # NVS：镜头翻转持久化
-    ├── photo_store.c/h     # SPI NAND 照片目录与读写
-    ├── photo_usb_msc.c/h   # USB MSC + NAND→FAT 同步
-    └── ui_icons.c/h        # UI 图标资源
+    ├── main.c              # Preview, capture, and gallery logic
+    ├── camera_ui.c/h       # LVGL camera and gallery UI
+    ├── camera_settings.c/h # NVS persistence for preview mirroring
+    ├── photo_store.c/h     # SPI NAND photo catalog and I/O
+    ├── photo_usb_msc.c/h   # USB MSC and NAND-to-FAT synchronization
+    └── ui_icons.c/h        # UI icon assets
 ```
 
-依赖 `esp-mosaico-bsp`、`mosaico_module_camera`、`mosaico_module_mgr`、`esp_new_jpeg`、`esp_tinyusb` 等组件。
+Dependencies include `esp-mosaico-bsp`, `mosaico_module_camera`, `mosaico_module_mgr`, `esp_new_jpeg`, and `esp_tinyusb`.
 
-## 编译与烧录
+## Build and flash
 
 ```bash
 cd examples/camera_photo_app
@@ -60,82 +58,80 @@ idf.py -p PORT flash
 idf.py -p PORT monitor
 ```
 
-> 首次使用 USB 导出或修改过分区表时，请执行完整 `flash`（含 `partition_table`）。
+> Perform a full `flash`, including `partition_table`, when enabling USB export for the first time or after changing the partition table.
 
-默认配置见 `sdkconfig.defaults`：PSRAM Oct 250 MHz、相机分辨率跟随传感器 Kconfig 默认格式、**USB U 盘默认关闭**（`SINGLE_APP_LARGE` 分区表）。
+Defaults in `sdkconfig.defaults` include Octal PSRAM at 250 MHz, the sensor's Kconfig default camera resolution, and **USB mass storage disabled** with the `SINGLE_APP_LARGE` partition table.
 
-> **注意**：`sdkconfig.defaults` 只在**首次生成**或**删除 `sdkconfig` 后**生效。若你之前已编译过并启用过 USB，本地 `sdkconfig` 会保留旧选项，需按下方「关闭 USB U 盘」操作后再烧录。
+> **Note:** `sdkconfig.defaults` applies when `sdkconfig` is first generated or regenerated after deletion. If USB was enabled in a previous build, the local `sdkconfig` retains that setting. Follow “Disable USB mass storage” below before flashing again.
 
-## 快速上手
+## Quick start
 
-1. 左槽插入相机子板，上电后等待串口出现 `Camera photo app started` 与实时预览。
-2. 点击底部 **快门** 拍照；左下角缩略图更新为最新一张。
-3. 点击左下角 **相册** 进入浏览；左右滑动切换，左上角 **返回** 回到相机。
-4. （可选）启用 USB U 盘后，用 USB 线连接 HS OTG 口到 PC，打开 U 盘 `DCIM` 文件夹查看照片。
+1. Insert the camera subboard into the left slot and power on. Wait for `Camera photo app started` in the serial log and the live preview on the display.
+2. Tap the bottom **shutter** button to take a photo. The bottom-left thumbnail updates to the latest photo.
+3. Tap the bottom-left **gallery** button to browse photos. Swipe left or right to switch photos, and tap **back** at the top left to return to the camera.
+4. Optionally, enable USB mass storage and connect the HS OTG port to a PC. Open the drive's `DCIM` folder to view photos.
 
-## 相机界面（触摸）
+## Camera touch interface
 
-```
+```text
 ┌─────────────────────────────────────┐
-│ Front          [闪光灯] [i]         │  ← 顶栏
+│ Front              [Flash] [i]      │  ← Top bar
 │                                     │
-│           实时预览 / 关摄像头黑屏      │
+│ Live preview / black when off       │
 │                                     │
-│ [相册]      (快门)        [翻转]    │  ← 底栏
+│ [Gallery]     (Shutter)      [Flip]  │  ← Bottom bar
 └─────────────────────────────────────┘
 ```
 
-| 控件 | 位置 | 作用 |
-|------|------|------|
-| 方向标签 | 左上 | 显示 `Front` 或 `Rear`（随翻转变化） |
-| 闪光灯 | 顶栏右侧 | 开关闪光灯（图标 on/off） |
-| 提示 (i) | 顶栏最右 | 弹出按键与顶部长按说明 |
-| 相册 | 左下 | 进入相册（显示最新缩略图） |
-| 快门 | 底部中央 | 拍照 |
-| 翻转 | 右下 | 切换前/后预览镜像，写入 NVS |
+| Control | Position | Action |
+|---------|----------|--------|
+| Orientation label | Top left | Shows `Front` or `Rear` according to the flip setting |
+| Flash | Right side of top bar | Toggles flash; the icon indicates on/off |
+| Help (i) | Far right of top bar | Shows button controls and top-button long-press instructions |
+| Gallery | Bottom left | Opens the gallery and shows the latest thumbnail |
+| Shutter | Bottom center | Takes a photo |
+| Flip | Bottom right | Toggles front/rear preview mirroring and saves the setting in NVS |
 
-### 长按关闭摄像头
+### Turn off the camera with a long press
 
-- **操作**：长按主板 **顶部按键（GPIO7）**
-- **关闭后**：全屏黑底，英文提示
-  `Camera is off.` / `Long press the top button to turn on again.`
-- **再次打开**：再次长按顶部按键，预览恢复
+- **Action:** Long-press the **top board button (GPIO7)**.
+- **While off:** A black screen displays `Camera is off.` / `Long press the top button to turn on again.`
+- **Turn on again:** Long-press the top button again to restore the preview.
 
-传感器通过 PWDN（GPIO48）进入休眠，停止取流但不卸载子板。
+The sensor enters sleep through PWDN (GPIO48). Capture stops, but the subboard remains registered.
 
-## 相册模式
+## Gallery mode
 
-- **进入**：相机界面点击左下角相册按钮
-- **切换**：在画面上 **左右滑动**
-- **标题**：顶部显示 `0039.jpg(320KB)` 格式
-- **删除**：顶栏右侧删除图标 → 确认框 → Delete
-- **返回**：顶栏左侧返回图标
+- **Open:** Tap the bottom-left gallery button in the camera view.
+- **Navigate:** Swipe **left or right** across the image.
+- **Title:** The top bar shows a label such as `0039.jpg(320KB)`.
+- **Delete:** Tap the top-right delete icon, then confirm with **Delete**.
+- **Return:** Tap the back icon at the top left.
 
-删除会同时更新 NAND 目录；若已启用 USB MSC，也会从 U 盘导出区删除（在 PC 未挂载 U 盘时）。删光所有照片后自动回到相机界面。
+Deleting a photo updates the NAND catalog. If USB MSC is enabled, it also removes the exported copy when the PC is not mounting the drive. Deleting all photos returns to the camera view automatically.
 
-## 闪光灯行为
+## Flash behavior
 
-开启闪光灯后每次拍照：
+When flash is enabled, each capture:
 
-1. 曝光临时提高至约 **1.5 倍**
-2. 闪光灯 **亮 200 ms** → 抓帧 → 编码保存到 NAND（及 USB 导出区，若已启用）
-3. 保存后再 **亮 200 ms** → 关灯并恢复曝光
+1. Temporarily increases exposure to approximately **1.5 times** its current value.
+2. Turns the flash **on for 200 ms**, captures a frame, and encodes and saves it to NAND and the USB export area if enabled.
+3. Lights the flash for another **200 ms** after saving, then turns it off and restores exposure.
 
-关闭闪光灯时拍照全程不亮灯。
+The flash remains off throughout capture when disabled.
 
-## USB 照片导出（U 盘，可选）
+## USB photo export (optional mass storage)
 
-> **默认不启用。** 在 `menuconfig -> Camera Photo App` 中打开
-> `Enable USB High-Speed MSC photo export (U-disk)`（`CONFIG_CAMERA_PHOTO_USB_MSC`）。
+> **Disabled by default.** Under `menuconfig -> Camera Photo App`, enable `Enable USB High-Speed MSC photo export (U-disk)` (`CONFIG_CAMERA_PHOTO_USB_MSC`).
 
-启用后还需：
+Also complete these steps:
 
-1. 将 `sdkconfig.defaults.usb_msc` 中的配置合并进 `sdkconfig.defaults`（或通过 menuconfig 手动设置分区表与 TinyUSB MSC）。
-2. 使用本目录下的 **`partitions.csv`**（含 FAT `storage` 分区），**删除 `sdkconfig` 后**完整重新编译烧录。
+1. Merge the settings from `sdkconfig.defaults.usb_msc` into `sdkconfig.defaults`, or configure the partition table and TinyUSB MSC manually in menuconfig.
+2. Use the **`partitions.csv`** in this directory, which includes the FAT `storage` partition. **Delete `sdkconfig`**, then rebuild and perform a full flash.
 
-### 关闭 USB U 盘
+### Disable USB mass storage
 
-`sdkconfig.defaults` 不会自动覆盖已有 `sdkconfig`。若烧录后 PC 仍出现 U 盘，说明本地仍是旧配置：
+`sdkconfig.defaults` does not automatically override an existing `sdkconfig`. If the PC still detects a drive after flashing, the local configuration still contains the old settings:
 
 ```bash
 cd examples/camera_photo_app
@@ -145,76 +141,79 @@ idf.py build
 idf.py -p ROM_PORT flash
 ```
 
-或在 `idf.py menuconfig` 中关闭 `Enable USB High-Speed MSC photo export`，并改回 `Single factory app, large` 分区表。
+Alternatively, disable `Enable USB High-Speed MSC photo export` in `idf.py menuconfig` and restore the `Single factory app, large` partition table.
 
-确认 `sdkconfig` 中为：
+Verify these settings in `sdkconfig`:
 
 - `# CONFIG_CAMERA_PHOTO_USB_MSC is not set`
 - `# CONFIG_TINYUSB_MSC_ENABLED is not set`
 - `CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y`
 
-### 原理
+### How it works
 
-- 照片主存储在 **SPI NAND**（`photo_store` 自定义目录）
-- 内部 Flash 上另有 **FAT 分区**（`partitions.csv` 中 `storage`），用于 USB MSC
-- 拍照/删除/插 USB 前会自动把 NAND 中的 JPEG **同步** 到 `/usb/DCIM/`
+- The primary photo store is **SPI NAND**, using the custom `photo_store` catalog.
+- A separate **FAT partition** in internal Flash (`storage` in `partitions.csv`) serves USB MSC.
+- JPEG files in NAND are automatically synchronized to `/usb/DCIM/` for photo capture, deletion, and USB connection.
 
-### 使用步骤
+### Usage
 
-1. 在设备上正常拍照。
-2. 用 USB 线连接 **HS OTG 口（Pin 44/45）** 到电脑（需支持数据传输的线缆）。
-3. 电脑识别为 **可移动磁盘**，进入 **`DCIM`** 文件夹查看 `0001.jpg` 等。
-4. 安全弹出或拔掉 USB 后，设备继续拍照；下次连接前会再次同步。
+1. Take photos on the device.
+2. Connect the **HS OTG port (Pin 44/45)** to a PC with a data-capable USB cable.
+3. The PC detects a **removable drive**. Open **`DCIM`** to view files such as `0001.jpg`.
+4. Safely eject or disconnect USB to continue taking photos. The device synchronizes again before the next connection.
 
-### 注意
+### Notes
 
-- U 盘内容为设备相册的 **导出副本**；在 PC 上删除文件 **不会** 删除设备 NAND 中的照片（下次同步可能重新出现）。
-- 在 PC 挂载 U 盘期间，设备仍可拍照（写入 NAND），USB 侧同步会等到 U 盘释放后再更新。
-- 本示例 **未启用** BSP USB CDC 控制台，调试请用 UART。
+- The drive contains **exported copies** of the device gallery. Deleting files on the PC **does not** delete photos from NAND; they may reappear on the next synchronization.
+- The device can still take photos and save them to NAND while the PC mounts the drive. USB synchronization waits until the drive is released.
+- This example **does not enable** the BSP USB CDC console. Use UART for debugging.
 
-### 分区表（16 MB Flash）
+### Partition table (16 MB Flash)
 
-| 分区 | 类型 | 大小（约） | 用途 |
-|------|------|-----------|------|
-| `factory` | app | 2.5 MB | 应用程序 |
-| `storage` | fat | 剩余 ~13.4 MB | USB MSC / DCIM 导出 |
+| Partition | Type | Approximate size | Purpose |
+|-----------|------|------------------|---------|
+| `factory` | app | 2.5 MB | Application |
+| `storage` | fat | Remaining ~13.4 MB | USB MSC / DCIM export |
 
-## 配置项
+## Configuration
 
 ### menuconfig → Camera Photo App
 
-| 选项 | 默认值 | 说明 |
-|------|--------|------|
-| Enable USB High-Speed MSC photo export | **关闭** | 启用 U 盘导出（见上文） |
-| First logical NAND page used for photo storage | 64 | 照片目录与数据区起始 NAND 页 |
-| Maximum number of photos stored on NAND | 64 | 最多保存张数 |
+| Option | Default | Description |
+|--------|---------|-------------|
+| Enable USB High-Speed MSC photo export | **Disabled** | Enables mass-storage export as described above |
+| First logical NAND page used for photo storage | 64 | First NAND page for the photo catalog and data area |
+| Maximum number of photos stored on NAND | 64 | Maximum photo count |
 
-修改 NAND 起始页会 **覆盖** 该页及之后用于照片的数据区域，请谨慎调整。
+Changing the NAND start page **overwrites** the photo storage area at that page and subsequent pages. Adjust it carefully.
 
-### 其他
+### Other settings
 
-- 镜头翻转：NVS 命名空间 `camera_app`，键 `prev_flip`
-- JPEG：`JPEG_QUALITY=80`，`MAX_JPEG_SIZE=256 KB`
+- Preview flip: NVS namespace `camera_app`, key `prev_flip`
+- JPEG: `JPEG_QUALITY=80`, `MAX_JPEG_SIZE=256 KB`
 
-## 存储说明（SPI NAND）
+## Storage details (SPI NAND)
 
-- 第 `CONFIG_CAMERA_PHOTO_NAND_START_PAGE` 页：目录（magic `PHOT`、文件名、大小、页号）
-- 之后页：JPEG 顺序追加；删除只改目录，不回收已写页
-- 文件名：`%04u.jpg` 递增，与 U 盘 `DCIM` 中一致
+- Page `CONFIG_CAMERA_PHOTO_NAND_START_PAGE`: catalog containing magic `PHOT`, filenames, sizes, and page numbers.
+- Subsequent pages: JPEG files appended sequentially. Deletion updates only the catalog and does not reclaim written pages.
+- Filenames: incrementing `%04u.jpg`, matching the USB drive's `DCIM` contents.
 
-## 常见问题
+## Troubleshooting
 
-**PC 未出现 U 盘**
-确认已在 menuconfig 启用 `CONFIG_CAMERA_PHOTO_USB_MSC`，并使用 `partitions.csv` 完整烧录；USB 线接 HS OTG 口（Pin 44/45）。
+**No USB drive appears on the PC**
 
-**预览花屏或相机掉线**
-检查左槽相机子板接触；串口若报 capture 失败会自动尝试重启取流。
+Enable `CONFIG_CAMERA_PHOTO_USB_MSC` in menuconfig and perform a full flash with `partitions.csv`. Connect the USB cable to the HS OTG port (Pin 44/45).
 
-**关摄像头后仍看到最后一帧**
-请烧录包含最新 UI 修复的固件；关摄像头时应显示黑屏与英文提示。
+**Corrupted preview or camera disconnects**
 
-## 参考
+Check the camera subboard connection in the left slot. Capture failures reported in the serial log trigger an automatic attempt to restart streaming.
 
-- 预览与显示：参考 `camera_lcd_preview` 思路（PPA + LVGL canvas）
-- NAND 访问：参考 `nand_flash_test` / BSP `bsp_nand_flash_*`
-- USB MSC：ESP-IDF `tusb_msc` / `esp_tinyusb` 组件
+**The last frame remains visible after turning off the camera**
+
+Flash firmware containing the latest UI fix. Turning off the camera should show a black screen and the status message.
+
+## References
+
+- Preview and display: `camera_lcd_preview` (PPA + LVGL canvas)
+- NAND access: BSP `bsp_nand_flash_*` APIs
+- USB MSC: ESP-IDF `tusb_msc` / `esp_tinyusb` component

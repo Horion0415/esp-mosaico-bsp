@@ -343,7 +343,6 @@ extern "C" void app_main(void)
 
     mosaico_camera_config_t config = MOSAICO_CAMERA_DEFAULT_CONFIG();
     config.buffer_count = 1;
-    config.allow_unidentified = true;
 
     capture_context_t capture = {};
     HumanFaceDetect *face = nullptr;
