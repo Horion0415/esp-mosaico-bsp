@@ -1,0 +1,1 @@
+idf_component_register(SRCS "main.c" "tof_ui.c" INCLUDE_DIRS ".")

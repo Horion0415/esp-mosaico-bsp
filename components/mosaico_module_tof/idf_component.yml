@@ -1,0 +1,14 @@
+version: "0.1.0"
+description: ESP-Mosaico VL53L0X ToF module
+license: Apache-2.0
+targets:
+  - esp32s31
+dependencies:
+  idf: ">=6.2"
+  esp-mosaico-bsp:
+    version: "*"
+    public: true
+    override_path: ../esp-mosaico-bsp
+  pkolt/vl53l0x:
+    version: "1.0.0"
+    public: true
