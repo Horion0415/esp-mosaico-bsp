@@ -211,6 +211,31 @@ static esp_err_t apply_touch_orientation(bsp_display_rotation_t rotation)
     return ESP_OK;
 }
 
+void bsp_display_round_area(int32_t *x1, int32_t *x2)
+{
+    if (!x1 || !x2) {
+        return;
+    }
+    const int32_t max_x = BSP_LCD_H_RES - 1;
+    int32_t start = *x1 < 0 ? 0 : (*x1 > max_x ? max_x : *x1);
+    int32_t end = *x2 < 0 ? 0 : (*x2 > max_x ? max_x : *x2);
+    *x1 = (start / BSP_LCD_X_ALIGN) * BSP_LCD_X_ALIGN;
+    end = ((end + BSP_LCD_X_ALIGN) / BSP_LCD_X_ALIGN) * BSP_LCD_X_ALIGN - 1;
+    *x2 = end > max_x ? max_x : end;
+}
+
+void bsp_display_round_bitmap_x(int32_t *x_start, int32_t *x_end)
+{
+    if (!x_start || !x_end || *x_end <= *x_start) {
+        return;
+    }
+    int32_t x1 = *x_start;
+    int32_t x2 = *x_end - 1;
+    bsp_display_round_area(&x1, &x2);
+    *x_start = x1;
+    *x_end = x2 + 1;
+}
+
 #if CONFIG_BSP_DISPLAY_LVGL_ENABLE
 static void round_qspi_area(lv_area_t *area, void *user_data)
 {
@@ -218,12 +243,7 @@ static void round_qspi_area(lv_area_t *area, void *user_data)
     if (!area) {
         return;
     }
-    const int max_x = BSP_LCD_H_RES - 1;
-    int x1 = area->x1 < 0 ? 0 : (area->x1 > max_x ? max_x : area->x1);
-    int x2 = area->x2 < 0 ? 0 : (area->x2 > max_x ? max_x : area->x2);
-    area->x1 = (x1 / 4) * 4;
-    x2 = ((x2 + 4) / 4) * 4 - 1;
-    area->x2 = x2 > max_x ? max_x : x2;
+    bsp_display_round_area(&area->x1, &area->x2);
 }
 #endif
 

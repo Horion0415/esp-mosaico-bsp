@@ -30,6 +30,16 @@ extern "C" {
 #define BSP_LCD_BITS_PER_PIXEL        16
 
 /**
+ * Horizontal alignment of a CO5300 QSPI pixel window, in pixels.
+ *
+ * Both the window origin and its width must be multiples of this value.
+ * ESP-GSP and esp_display_present apply it by setting
+ * render_alignment.x_pixels and render_alignment.width_pixels to
+ * BSP_LCD_X_ALIGN before rasterizing a dirty area.
+ */
+#define BSP_LCD_X_ALIGN               4
+
+/**
  * @brief Display rotation angle, applied through the CO5300 MADCTL register.
  *
  * Deliberately independent of the LVGL adapter: the adapter never rotates a QSPI panel,
@@ -88,6 +98,33 @@ typedef struct {
     .rotation = BSP_LCD_ROTATION_DEFAULT, \
     BSP_DISPLAY_ADAPTER_CONFIG() \
 }
+
+/**
+ * @brief Expand an inclusive X span onto the CO5300 QSPI pixel grid.
+ *
+ * Aligns @p x1 down and @p x2 up to BSP_LCD_X_ALIGN, then clips both ends to
+ * the panel. Only the horizontal span changes. The caller rasterizes the
+ * expanded span; this call does not resize a pixel buffer.
+ *
+ * Coordinates are inclusive at both ends, matching lv_area_t. LVGL registers
+ * this operation as its area rounder.
+ *
+ * @param[in,out] x1 Left coordinate. Ignored when NULL.
+ * @param[in,out] x2 Right coordinate. Ignored when NULL.
+ */
+void bsp_display_round_area(int32_t *x1, int32_t *x2);
+
+/**
+ * @brief Expand an exclusive X window used by esp_lcd_panel_draw_bitmap().
+ *
+ * @p x_start is inclusive and @p x_end is exclusive. An empty window
+ * (@p x_end <= @p x_start) is left unchanged. The pixel buffer must cover
+ * the expanded window.
+ *
+ * @param[in,out] x_start Left coordinate. Ignored when NULL.
+ * @param[in,out] x_end   Right coordinate, exclusive. Ignored when NULL.
+ */
+void bsp_display_round_bitmap_x(int32_t *x_start, int32_t *x_end);
 
 /* Non-LVGL callers must serialize panel operations with their renderer. */
 esp_err_t bsp_display_new(const bsp_display_config_t *config, esp_lcd_panel_handle_t *ret_panel);
